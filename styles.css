@@ -1,11 +1,37 @@
-:root {
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121212;
+  --panel: #1c1c1c;
+  --ink: #ededed;
+  --muted: #a3a3a3;
+  --line: #2e2e2e;
+  --input-bg: #161616;
+  --btn-bg: #ededed;
+  --btn-ink: #121212;
+  --him: #60a5fa;
+  --her: #f87171;
+  --him-line: #1e3a5f;
+  --her-line: #5f1f1f;
+  --split-row: #3a2e12;
+  --warn: #fbbf24;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
   --bg: #f4f3ef;
   --panel: #fff;
   --ink: #161616;
   --muted: #5c5c5c;
   --line: #e4e2da;
+  --input-bg: #fff;
+  --btn-bg: #161616;
+  --btn-ink: #fff;
   --him: #1d4ed8;
   --her: #b91c1c;
+  --him-line: #bfdbfe;
+  --her-line: #fecaca;
+  --split-row: #fef3c7;
   --warn: #92400e;
 }
 
@@ -31,8 +57,44 @@ body {
   margin-bottom: 28px;
 }
 
+.hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: var(--muted);
+}
+
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+[data-theme="dark"] .theme-toggle .icon-moon,
+[data-theme="light"] .theme-toggle .icon-sun {
+  display: none;
+}
+
 .brand {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 13px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -91,7 +153,7 @@ h2 {
 }
 
 .person.him {
-  border-color: #bfdbfe;
+  border-color: var(--him-line);
 }
 
 .person.him legend {
@@ -99,7 +161,7 @@ h2 {
 }
 
 .person.her {
-  border-color: #fecaca;
+  border-color: var(--her-line);
 }
 
 .person.her legend {
@@ -138,7 +200,8 @@ input[type="number"] {
   padding: 8px 10px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: #fff;
+  background: var(--input-bg);
+  color: var(--ink);
 }
 
 input[type="number"]:focus {
@@ -172,13 +235,13 @@ button[type="submit"] {
   padding: 10px 18px;
   border: 0;
   border-radius: 6px;
-  background: var(--ink);
-  color: #fff;
+  background: var(--btn-bg);
+  color: var(--btn-ink);
   cursor: pointer;
 }
 
 button[type="submit"]:hover {
-  background: #000;
+  opacity: 0.88;
 }
 
 .error {
@@ -288,7 +351,7 @@ th {
 }
 
 tr.split-row {
-  background: #fef3c7;
+  background: var(--split-row);
 }
 
 .him-cell {

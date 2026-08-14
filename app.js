@@ -128,10 +128,26 @@ function simulate(p) {
 }
 
 let chart;
+let lastChart;
+
+function themeColors() {
+  const s = getComputedStyle(document.documentElement);
+  return {
+    ink: s.getPropertyValue("--ink").trim(),
+    muted: s.getPropertyValue("--muted").trim(),
+    line: s.getPropertyValue("--line").trim(),
+    him: s.getPropertyValue("--him").trim(),
+    her: s.getPropertyValue("--her").trim(),
+  };
+}
 
 function renderChart(data, divorceYear) {
+  lastChart = { data, divorceYear };
   const ctx = document.getElementById("chart");
+  const c = themeColors();
   if (chart) chart.destroy();
+  Chart.defaults.color = c.muted;
+  Chart.defaults.borderColor = c.line;
   chart = new Chart(ctx, {
     type: "line",
     data: {
@@ -139,8 +155,8 @@ function renderChart(data, divorceYear) {
         {
           label: "Him",
           data: data.months.map((x, i) => ({ x, y: data.manM[i] })),
-          borderColor: "#1d4ed8",
-          backgroundColor: "#1d4ed8",
+          borderColor: c.him,
+          backgroundColor: c.him,
           borderWidth: 2,
           pointRadius: 0,
           tension: 0.05,
@@ -148,8 +164,8 @@ function renderChart(data, divorceYear) {
         {
           label: "Her",
           data: data.months.map((x, i) => ({ x, y: data.womanM[i] })),
-          borderColor: "#b91c1c",
-          backgroundColor: "#b91c1c",
+          borderColor: c.her,
+          backgroundColor: c.her,
           borderWidth: 2,
           pointRadius: 0,
           tension: 0.05,
@@ -161,38 +177,41 @@ function renderChart(data, divorceYear) {
       maintainAspectRatio: false,
       interaction: { mode: "index", intersect: false },
       plugins: {
-        legend: { labels: { boxWidth: 12 } },
+        legend: { labels: { boxWidth: 12, color: c.ink } },
       },
       scales: {
         x: {
           type: "linear",
-          title: { display: true, text: "Year" },
-          ticks: { stepSize: 1 },
+          title: { display: true, text: "Year", color: c.muted },
+          ticks: { stepSize: 1, color: c.muted },
+          grid: { color: c.line },
         },
         y: {
-          title: { display: true, text: "Net worth, $" },
+          title: { display: true, text: "Net worth, $", color: c.muted },
           ticks: {
+            color: c.muted,
             callback: (v) =>
               Math.abs(v) >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`,
           },
+          grid: { color: c.line },
         },
       },
     },
     plugins: [
       {
         id: "divorceLine",
-        afterDraw(c) {
-          const { ctx: g, chartArea, scales } = c;
+        afterDraw(ch) {
+          const { ctx: g, chartArea, scales } = ch;
           const x = scales.x.getPixelForValue(divorceYear);
           if (x < chartArea.left || x > chartArea.right) return;
           g.save();
-          g.strokeStyle = "#9ca3af";
+          g.strokeStyle = c.muted;
           g.setLineDash([5, 4]);
           g.beginPath();
           g.moveTo(x, chartArea.top);
           g.lineTo(x, chartArea.bottom);
           g.stroke();
-          g.fillStyle = "#6b7280";
+          g.fillStyle = c.muted;
           g.font = "12px Segoe UI, system-ui, sans-serif";
           g.fillText("Split", x + 6, chartArea.top + 12);
           g.restore();
@@ -346,3 +365,23 @@ form.addEventListener("input", () => updateLeftoverHint(form));
 
 updateLeftoverHint(form);
 run(form);
+
+function currentTheme() {
+  return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+}
+
+function syncThemeToggle() {
+  const btn = document.getElementById("theme-toggle");
+  const next = currentTheme() === "dark" ? "light" : "dark";
+  btn.setAttribute("aria-label", `Switch to ${next} theme`);
+}
+
+document.getElementById("theme-toggle").addEventListener("click", () => {
+  const next = currentTheme() === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("theme", next);
+  syncThemeToggle();
+  if (lastChart) renderChart(lastChart.data, lastChart.divorceYear);
+});
+
+syncThemeToggle();
