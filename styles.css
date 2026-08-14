@@ -309,6 +309,11 @@ button[type="submit"]:hover {
   color: var(--her);
 }
 
+.chart-wrap {
+  position: relative;
+  height: 360px;
+}
+
 .chart-panel .hint {
   margin: 10px 0 0;
 }
