@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DivorceMath — net worth after a split</title>
+    <meta
+      name="description"
+      content="See who walks away with what. Pre-relationship money stays put. Salaries left over plus investment interest are split."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <p class="brand">DivorceMath</p>
+        <h1>Who walks away with what?</h1>
+        <p class="lede">
+          Same fields for both people. Pre-relationship capital is not split.
+          Leftover salary while together, plus all investment interest from
+          those years, is divided. After the split, each pays their own spending.
+        </p>
+      </header>
+
+      <form id="calc-form" class="panel">
+        <div class="people">
+          <fieldset class="person him">
+            <legend>Him</legend>
+            <label>
+              Monthly income, $
+              <input name="hisIncome" type="number" min="0" step="100" value="5000" required />
+            </label>
+            <label>
+              Monthly spending, $
+              <input name="hisSpend" type="number" min="0" step="50" value="1500" required />
+            </label>
+            <label>
+              Pays for her while together, $
+              <input name="hePaysForHer" type="number" min="0" step="50" value="1500" required />
+              <span class="hint">Stops after the split</span>
+            </label>
+            <label>
+              Starting investments, $
+              <input name="hisStart" type="number" min="0" step="1000" value="60000" required />
+              <span class="hint">From before the relationship — not split</span>
+            </label>
+            <label>
+              Annual return, %
+              <input name="hisReturn" type="number" step="0.1" value="10" required />
+            </label>
+          </fieldset>
+
+          <fieldset class="person her">
+            <legend>Her</legend>
+            <label>
+              Monthly income, $
+              <input name="herIncome" type="number" min="0" step="100" value="1000" required />
+            </label>
+            <label>
+              Monthly spending, $
+              <input name="herSpend" type="number" min="0" step="50" value="1500" required />
+            </label>
+            <label>
+              Pays for him while together, $
+              <input name="shePaysForHim" type="number" min="0" step="50" value="0" required />
+              <span class="hint">Stops after the split</span>
+            </label>
+            <label>
+              Starting investments, $
+              <input name="herStart" type="number" min="0" step="1000" value="0" required />
+              <span class="hint">From before the relationship — not split</span>
+            </label>
+            <label>
+              Annual return, %
+              <input name="herReturn" type="number" step="0.1" value="0" required />
+              <span class="hint">0% = cash, not invested</span>
+            </label>
+          </fieldset>
+        </div>
+
+        <div class="shared">
+          <label>
+            Years together
+            <input name="divorceYear" type="number" min="1" max="50" step="1" value="5" required />
+            <span class="hint">Split at the end of this year</span>
+          </label>
+          <label>
+            Years to project
+            <input name="horizon" type="number" min="1" max="50" step="1" value="10" required />
+          </label>
+          <label>
+            Her share of acquired assets, %
+            <input name="herSharePct" type="number" min="0" max="100" step="1" value="50" required />
+          </label>
+        </div>
+
+        <p id="leftover-hint" class="hint leftover"></p>
+        <p id="form-error" class="error" hidden></p>
+        <button type="submit">Calculate</button>
+      </form>
+
+      <section id="results" class="results" hidden>
+        <div class="stats" id="stats"></div>
+        <div class="panel chart-panel">
+          <h2>Net worth</h2>
+          <div class="chart-wrap">
+            <canvas id="chart"></canvas>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>What was split</h2>
+          <div id="split-breakdown" class="breakdown"></div>
+        </div>
+        <div class="panel">
+          <h2>Year by year</h2>
+          <div class="table-wrap">
+            <table id="year-table"></table>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

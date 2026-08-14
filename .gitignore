@@ -1,0 +1,7 @@
+.DS_Store
+*.pyc
+__pycache__/
+.venv/
+venv/
+networth_divorce_year5.py
+networth_divorce_year5.png
