@@ -20,6 +20,8 @@ Leftover while together:
 
 `income − own spending − what they pay for the other + what the other pays for them`
 
+If leftover is negative, the shortfall is withdrawn from that person's investments. That money is still theirs — it is not treated as a shared loss — so their pre-relationship capital shrinks by the withdrawal. Monthly returns apply to the remaining balance, so interest falls as the pile is drawn down.
+
 ## Run locally
 
 Open `index.html` in a browser, or:

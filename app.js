@@ -50,17 +50,28 @@ function grow(balance, annualPct, contribution) {
   return balance * (1 + annualPct / 100 / 12) + contribution;
 }
 
-function splitAt(p, man, woman, hisContrib, herContrib) {
-  const hisInterest = man - p.hisStart - hisContrib;
-  const herInterest = woman - p.herStart - herContrib;
-  const community = hisContrib + hisInterest + herContrib + herInterest;
+function applyMonthlyFlow(saved, drawn, flow) {
+  if (flow >= 0) return { saved: saved + flow, drawn };
+  return { saved, drawn: drawn - flow };
+}
+
+function splitAt(p, man, woman, hisSaved, herSaved, hisDrawn, herDrawn) {
+  const hisSeparate = Math.max(0, p.hisStart - hisDrawn);
+  const herSeparate = Math.max(0, p.herStart - herDrawn);
+  const hisInterest = man - hisSeparate - hisSaved;
+  const herInterest = woman - herSeparate - herSaved;
+  const community = hisSaved + hisInterest + herSaved + herInterest;
   const herPart = community * (p.herSharePct / 100);
   const hisPart = community - herPart;
-  const manAfter = p.hisStart + hisPart;
-  const womanAfter = p.herStart + herPart;
+  const manAfter = hisSeparate + hisPart;
+  const womanAfter = herSeparate + herPart;
   return {
-    hisLeftoverSalary: hisContrib,
-    herLeftoverSalary: herContrib,
+    hisLeftoverSalary: hisSaved,
+    herLeftoverSalary: herSaved,
+    hisDrawn,
+    herDrawn,
+    hisSeparate,
+    herSeparate,
     hisInterest,
     herInterest,
     allInterest: hisInterest + herInterest,
@@ -80,8 +91,10 @@ function splitAt(p, man, woman, hisContrib, herContrib) {
 function simulate(p) {
   let man = p.hisStart;
   let woman = p.herStart;
-  let hisContrib = 0;
-  let herContrib = 0;
+  let hisSaved = 0;
+  let herSaved = 0;
+  let hisDrawn = 0;
+  let herDrawn = 0;
   const months = [0];
   const manM = [man];
   const womanM = [woman];
@@ -96,8 +109,8 @@ function simulate(p) {
       const herFlow = leftoverTogether(p, "her");
       man = grow(man, p.hisReturn, hisFlow);
       woman = grow(woman, p.herReturn, herFlow);
-      hisContrib += hisFlow;
-      herContrib += herFlow;
+      ({ saved: hisSaved, drawn: hisDrawn } = applyMonthlyFlow(hisSaved, hisDrawn, hisFlow));
+      ({ saved: herSaved, drawn: herDrawn } = applyMonthlyFlow(herSaved, herDrawn, herFlow));
       elapsed += 1;
       months.push(elapsed / 12);
       manM.push(man);
@@ -105,7 +118,7 @@ function simulate(p) {
     }
     manY.push(man);
     womanY.push(woman);
-    splits.push(splitAt(p, man, woman, hisContrib, herContrib));
+    splits.push(splitAt(p, man, woman, hisSaved, herSaved, hisDrawn, herDrawn));
   }
 
   return {
@@ -251,13 +264,23 @@ function renderBreakdown(data, p) {
     [`If they divorced at year ${year}`, ""],
     ["His leftover salary", last.hisLeftoverSalary],
     ["Her leftover salary", last.herLeftoverSalary],
+  ];
+  if (last.hisDrawn > 0) {
+    rows.push(["Taken from his investments", -last.hisDrawn]);
+    rows.push(["His remaining pre-relationship capital", last.hisSeparate]);
+  }
+  if (last.herDrawn > 0) {
+    rows.push(["Taken from her investments", -last.herDrawn]);
+    rows.push(["Her remaining pre-relationship capital", last.herSeparate]);
+  }
+  rows.push(
     ["His investment interest", last.hisInterest],
     ["Her investment interest", last.herInterest],
     ["Acquired assets (would be split)", last.community],
     [`Her share (${p.herSharePct}%)`, last.herPart],
     ["Him after that divorce", last.manAfter],
-    ["Her after that divorce", last.womanAfter],
-  ];
+    ["Her after that divorce", last.womanAfter]
+  );
   document.getElementById("split-breakdown").innerHTML = rows
     .map(([k, v]) =>
       v === ""
@@ -350,19 +373,28 @@ function updateLeftoverHint(form) {
   const herT = leftoverTogether(p, "her");
   const himA = leftoverApart(p, "him");
   const herA = leftoverApart(p, "her");
-  document.getElementById("leftover-hint").textContent =
+  let text =
     `Leftover per month while together: him ${usd(himT)}, her ${usd(herT)}. ` +
     `If they divorced, leftover would become: him ${usd(himA)}, her ${usd(herA)}.`;
+  if (himT < 0 || herT < 0) {
+    text +=
+      " A negative leftover is taken from that person's investments — still their money, not a shared loss — so that pile earns less interest.";
+  }
+  document.getElementById("leftover-hint").textContent = text;
 }
 
 function run(form) {
   const p = readInputs(form);
   const warnings = [];
   if (leftoverTogether(p, "him") < 0) {
-    warnings.push("While together, his leftover is negative, so his portfolio is drawn down.");
+    warnings.push(
+      "While together, his leftover is negative, so the shortfall comes out of his investments and those earn less interest."
+    );
   }
   if (leftoverTogether(p, "her") < 0) {
-    warnings.push("While together, her leftover is negative, so her savings are drawn down.");
+    warnings.push(
+      "While together, her leftover is negative, so the shortfall comes out of her investments and those earn less interest."
+    );
   }
   showError(warnings.join(" "));
 
