@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Male and female signs">
   <g fill="none" stroke="#dc2626" stroke-width="2.2" stroke-linecap="round">
-    <circle cx="10" cy="11.4" r="5.6"/>
-    <path d="M10 17v11.4M6 23.8h8"/>
+    <circle cx="10" cy="11.2" r="5.5"/>
+    <path d="M10 16.7v11.5M6 23.6h8"/>
   </g>
   <g fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="21.6" cy="20.6" r="5.6"/>
-    <path d="M25.6 16.6 30.4 8.6"/>
-    <path d="M25.4 9.2h5v5"/>
+    <circle cx="21.5" cy="20.8" r="5.5"/>
+    <path d="M25.4 16.9 30.2 8.6"/>
+    <path d="M26 8.6h4.2v4.2"/>
   </g>
 </svg>
