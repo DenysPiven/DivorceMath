@@ -240,7 +240,18 @@ function renderBreakdown(split, p) {
     .join("");
 }
 
-function renderTable(data, divorceYear) {
+function renderConclusion(split, divorceYear) {
+  const amount = Math.round(Math.abs(split.transfer));
+  let text;
+  if (amount === 0) {
+    text = `At the moment of divorce (year ${divorceYear}), nobody pays a settlement: the transfer is <strong>$0</strong>.`;
+  } else if (split.transfer > 0) {
+    text = `At the moment of divorce (year ${divorceYear}), he pays her <strong>${usd(amount)}</strong>.`;
+  } else {
+    text = `At the moment of divorce (year ${divorceYear}), she pays him <strong>${usd(amount)}</strong>.`;
+  }
+  document.getElementById("conclusion").innerHTML = text;
+}
   const rows = data.manY
     .map((_, i) => {
       let phase = "Start";
@@ -318,6 +329,7 @@ function run(form) {
   renderBreakdown(data.split, p);
   renderTable(data, p.divorceYear);
   renderChart(data, p.divorceYear);
+  renderConclusion(data.split, p.divorceYear);
 }
 
 const form = document.getElementById("calc-form");

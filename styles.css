@@ -187,9 +187,14 @@ button[type="submit"]:hover {
   font-size: 13px;
 }
 
-.results {
-  display: flex;
-  flex-direction: column;
+.conclusion p {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.conclusion strong {
+  font-weight: 700;
 }
 
 .stats {
