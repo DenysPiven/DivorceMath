@@ -93,6 +93,19 @@ body {
   display: none;
 }
 
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  display: block;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
 .brand {
   margin: 0;
   font-size: 13px;
