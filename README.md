@@ -41,4 +41,4 @@ Then visit `http://localhost:8000`.
 
 ## Default scenario
 
-He earns $5,000, spends $1,500 on himself, and pays $1,500 for her. She earns $1,000, spends $1,500, and pays $0 for him — so he covers her living and she saves her full salary. He starts with $60,000 at 10%; she starts at $0 with 0% return. Five years together, 50/50 split of acquired assets, ten-year chart.
+He earns $5,000, spends $1,500 on himself, and pays $1,500 for her. She earns $1,000, spends $1,500, and pays $0 for him — so he covers her living and she saves her full salary. He starts with $60,000 at 10%; she starts at $0, also at 10%. Five years together, 50/50 split of acquired assets, ten-year chart.
