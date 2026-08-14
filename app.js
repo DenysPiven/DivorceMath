@@ -242,16 +242,21 @@ function renderBreakdown(split, p) {
 
 function renderConclusion(split, divorceYear) {
   const amount = Math.round(Math.abs(split.transfer));
+  const months = divorceYear * 12;
+  const perMonth = months ? amount / months : 0;
+  const monthly = `<strong>${usd(perMonth)} per month</strong>`;
   let text;
   if (amount === 0) {
-    text = `At the moment of divorce (year ${divorceYear}), nobody pays a settlement: the transfer is <strong>$0</strong>.`;
+    text = `At the moment of divorce (year ${divorceYear}), nobody pays a settlement: the transfer is <strong>$0</strong>. Over ${months} months together, the marriage costs <strong>$0 per month</strong>.`;
   } else if (split.transfer > 0) {
-    text = `At the moment of divorce (year ${divorceYear}), he pays her <strong>${usd(amount)}</strong>.`;
+    text = `At the moment of divorce (year ${divorceYear}), he pays her <strong>${usd(amount)}</strong>. Over ${months} months together, she costs him ${monthly} just for the marriage.`;
   } else {
-    text = `At the moment of divorce (year ${divorceYear}), she pays him <strong>${usd(amount)}</strong>.`;
+    text = `At the moment of divorce (year ${divorceYear}), she pays him <strong>${usd(amount)}</strong>. Over ${months} months together, he costs her ${monthly} just for the marriage.`;
   }
   document.getElementById("conclusion").innerHTML = text;
 }
+
+function renderTable(data, divorceYear) {
   const rows = data.manY
     .map((_, i) => {
       let phase = "Start";
