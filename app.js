@@ -134,19 +134,6 @@ function themeColors() {
   };
 }
 
-function withAlpha(color, alpha) {
-  const hex = color.trim().replace("#", "");
-  if (hex.length === 6 && /^[0-9a-fA-F]+$/.test(hex)) {
-    const n = parseInt(hex, 16);
-    return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
-  }
-  return color;
-}
-
-function moneyTick(v) {
-  return Math.abs(v) >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`;
-}
-
 function renderChart(data) {
   lastChart = { data };
   const ctx = document.getElementById("chart");
@@ -155,70 +142,33 @@ function renderChart(data) {
   Chart.defaults.color = c.muted;
   Chart.defaults.borderColor = c.line;
   const years = data.splits
-    .map((s, i) =>
-      s
-        ? {
-            x: i,
-            yHim: s.manAfter,
-            yHer: s.womanAfter,
-            hisGain: s.hisGain,
-            herGain: s.herGain,
-          }
-        : null
-    )
+    .map((s, i) => (s ? { x: i, yHim: s.manAfter, yHer: s.womanAfter } : null))
     .filter(Boolean);
   chart = new Chart(ctx, {
     type: "line",
     data: {
       datasets: [
         {
-          type: "bar",
-          label: "His gain/loss if divorced",
-          data: years.map((p) => ({ x: p.x, y: p.hisGain })),
-          yAxisID: "yDiff",
-          backgroundColor: withAlpha(c.him, 0.35),
-          borderColor: c.him,
-          borderWidth: 1,
-          maxBarThickness: 18,
-          order: 3,
-        },
-        {
-          type: "bar",
-          label: "Her gain/loss if divorced",
-          data: years.map((p) => ({ x: p.x, y: p.herGain })),
-          yAxisID: "yDiff",
-          backgroundColor: withAlpha(c.her, 0.35),
-          borderColor: c.her,
-          borderWidth: 1,
-          maxBarThickness: 18,
-          order: 3,
-        },
-        {
           label: "Him, stay together",
           data: data.months.map((x, i) => ({ x, y: data.manM[i] })),
-          yAxisID: "y",
           borderColor: c.him,
           backgroundColor: c.him,
           borderWidth: 2,
           pointRadius: 0,
           tension: 0.05,
-          order: 1,
         },
         {
           label: "Her, stay together",
           data: data.months.map((x, i) => ({ x, y: data.womanM[i] })),
-          yAxisID: "y",
           borderColor: c.her,
           backgroundColor: c.her,
           borderWidth: 2,
           pointRadius: 0,
           tension: 0.05,
-          order: 1,
         },
         {
           label: "Him if divorced this year",
           data: years.map((p) => ({ x: p.x, y: p.yHim })),
-          yAxisID: "y",
           borderColor: c.him,
           backgroundColor: c.him,
           borderWidth: 1.5,
@@ -226,12 +176,10 @@ function renderChart(data) {
           pointRadius: 4,
           pointHoverRadius: 6,
           tension: 0,
-          order: 0,
         },
         {
           label: "Her if divorced this year",
           data: years.map((p) => ({ x: p.x, y: p.yHer })),
-          yAxisID: "y",
           borderColor: c.her,
           backgroundColor: c.her,
           borderWidth: 1.5,
@@ -239,7 +187,6 @@ function renderChart(data) {
           pointRadius: 4,
           pointHoverRadius: 6,
           tension: 0,
-          order: 0,
         },
       ],
     },
@@ -253,25 +200,18 @@ function renderChart(data) {
       scales: {
         x: {
           type: "linear",
-          offset: true,
           title: { display: true, text: "Year", color: c.muted },
           ticks: { stepSize: 1, color: c.muted },
           grid: { color: c.line },
         },
         y: {
           title: { display: true, text: "Net worth, $", color: c.muted },
-          ticks: { color: c.muted, callback: moneyTick },
-          grid: { color: c.line },
-        },
-        yDiff: {
-          position: "right",
-          title: {
-            display: true,
-            text: "Gain/loss if divorced, $",
+          ticks: {
             color: c.muted,
+            callback: (v) =>
+              Math.abs(v) >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`,
           },
-          ticks: { color: c.muted, callback: moneyTick },
-          grid: { drawOnChartArea: false },
+          grid: { color: c.line },
         },
       },
     },
