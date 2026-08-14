@@ -183,7 +183,7 @@ h2 {
 
 .shared {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 16px 20px;
 }
 
@@ -265,8 +265,8 @@ button[type="submit"]:hover {
 
 .conclusion p {
   margin: 0;
-  font-size: 18px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.7;
 }
 
 .conclusion strong {
@@ -309,9 +309,8 @@ button[type="submit"]:hover {
   color: var(--her);
 }
 
-.chart-wrap {
-  position: relative;
-  height: 360px;
+.chart-panel .hint {
+  margin: 10px 0 0;
 }
 
 .breakdown {

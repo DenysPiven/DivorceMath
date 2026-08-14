@@ -49,9 +49,9 @@
         </div>
         <h1>Who walks away with what?</h1>
         <p class="lede">
-          Same fields for both people. Pre-relationship capital is not split.
-          Leftover salary while together, plus all investment interest from
-          those years, is divided. After the split, each pays their own spending.
+          The chart assumes they stay together and keep earning. Each year is a
+          what-if: leftover salary plus all investment interest would be split,
+          and the points show who would gain or lose from a divorce that year.
         </p>
       </header>
 
@@ -70,7 +70,7 @@
             <label>
               Pays for her while together, $
               <input name="hePaysForHer" type="number" min="0" step="50" value="1500" required />
-              <span class="hint">Stops after the split</span>
+              <span class="hint">Stops if they divorce</span>
             </label>
             <label>
               Starting investments, $
@@ -96,7 +96,7 @@
             <label>
               Pays for him while together, $
               <input name="shePaysForHim" type="number" min="0" step="50" value="0" required />
-              <span class="hint">Stops after the split</span>
+              <span class="hint">Stops if they divorce</span>
             </label>
             <label>
               Starting investments, $
@@ -113,17 +113,13 @@
 
         <div class="shared">
           <label>
-            Years together
-            <input name="divorceYear" type="number" min="1" max="50" step="1" value="5" required />
-            <span class="hint">Split at the end of this year</span>
-          </label>
-          <label>
             Years to project
             <input name="horizon" type="number" min="1" max="50" step="1" value="10" required />
           </label>
           <label>
             Her share of acquired assets, %
             <input name="herSharePct" type="number" min="0" max="100" step="1" value="50" required />
+            <span class="hint">Used only for the yearly divorce what-ifs</span>
           </label>
         </div>
 
@@ -135,17 +131,18 @@
       <section id="results" class="results" hidden>
         <div class="stats" id="stats"></div>
         <div class="panel chart-panel">
-          <h2>Net worth</h2>
+          <h2>Net worth if they never divorce</h2>
           <div class="chart-wrap">
             <canvas id="chart"></canvas>
           </div>
+          <p class="hint">Solid lines: they never divorce. Dots: net worth if they divorced at the end of that year.</p>
         </div>
         <div class="panel">
-          <h2>What was split</h2>
+          <h2>If they divorced that year</h2>
           <div id="split-breakdown" class="breakdown"></div>
         </div>
         <div class="panel">
-          <h2>Year by year</h2>
+          <h2>Year by year — stay together vs divorce that year</h2>
           <div class="table-wrap">
             <table id="year-table"></table>
           </div>

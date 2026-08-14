@@ -29,7 +29,6 @@ function readInputs(form) {
     herStart: num("herStart"),
     hisReturn: num("hisReturn"),
     herReturn: num("herReturn"),
-    divorceYear: num("divorceYear"),
     horizon: num("horizon"),
     herSharePct: num("herSharePct"),
   };
@@ -51,6 +50,33 @@ function grow(balance, annualPct, contribution) {
   return balance * (1 + annualPct / 100 / 12) + contribution;
 }
 
+function splitAt(p, man, woman, hisContrib, herContrib) {
+  const hisInterest = man - p.hisStart - hisContrib;
+  const herInterest = woman - p.herStart - herContrib;
+  const community = hisContrib + hisInterest + herContrib + herInterest;
+  const herPart = community * (p.herSharePct / 100);
+  const hisPart = community - herPart;
+  const manAfter = p.hisStart + hisPart;
+  const womanAfter = p.herStart + herPart;
+  return {
+    hisLeftoverSalary: hisContrib,
+    herLeftoverSalary: herContrib,
+    hisInterest,
+    herInterest,
+    allInterest: hisInterest + herInterest,
+    community,
+    herPart,
+    hisPart,
+    manBefore: man,
+    womanBefore: woman,
+    manAfter,
+    womanAfter,
+    hisGain: manAfter - man,
+    herGain: womanAfter - woman,
+    transfer: womanAfter - woman,
+  };
+}
+
 function simulate(p) {
   let man = p.hisStart;
   let woman = p.herStart;
@@ -61,58 +87,25 @@ function simulate(p) {
   const womanM = [woman];
   const manY = [man];
   const womanY = [woman];
-  let split = null;
+  const splits = [null];
   let elapsed = 0;
 
   for (let year = 1; year <= p.horizon; year += 1) {
     for (let m = 0; m < 12; m += 1) {
-      const together = year <= p.divorceYear && !split;
-      const hisFlow = together ? leftoverTogether(p, "him") : leftoverApart(p, "him");
-      const herFlow = together ? leftoverTogether(p, "her") : leftoverApart(p, "her");
+      const hisFlow = leftoverTogether(p, "him");
+      const herFlow = leftoverTogether(p, "her");
       man = grow(man, p.hisReturn, hisFlow);
       woman = grow(woman, p.herReturn, herFlow);
-      if (together) {
-        hisContrib += hisFlow;
-        herContrib += herFlow;
-      }
+      hisContrib += hisFlow;
+      herContrib += herFlow;
       elapsed += 1;
       months.push(elapsed / 12);
       manM.push(man);
       womanM.push(woman);
     }
-
-    if (year === p.divorceYear && !split) {
-      const hisInterest = man - p.hisStart - hisContrib;
-      const herInterest = woman - p.herStart - herContrib;
-      const community = hisContrib + hisInterest + herContrib + herInterest;
-      const herPart = community * (p.herSharePct / 100);
-      const hisPart = community - herPart;
-      const manBefore = man;
-      const womanBefore = woman;
-      man = p.hisStart + hisPart;
-      woman = p.herStart + herPart;
-      split = {
-        hisLeftoverSalary: hisContrib,
-        herLeftoverSalary: herContrib,
-        hisInterest,
-        herInterest,
-        allInterest: hisInterest + herInterest,
-        community,
-        herPart,
-        hisPart,
-        manBefore,
-        womanBefore,
-        manAfter: man,
-        womanAfter: woman,
-        transfer: woman - womanBefore,
-      };
-      months.push(p.divorceYear);
-      manM.push(man);
-      womanM.push(woman);
-    }
-
     manY.push(man);
     womanY.push(woman);
+    splits.push(splitAt(p, man, woman, hisContrib, herContrib));
   }
 
   return {
@@ -123,7 +116,7 @@ function simulate(p) {
     womanY,
     manD: manY.slice(1).map((v, i) => v - manY[i]),
     womanD: womanY.slice(1).map((v, i) => v - womanY[i]),
-    split,
+    splits,
   };
 }
 
@@ -141,19 +134,22 @@ function themeColors() {
   };
 }
 
-function renderChart(data, divorceYear) {
-  lastChart = { data, divorceYear };
+function renderChart(data) {
+  lastChart = { data };
   const ctx = document.getElementById("chart");
   const c = themeColors();
   if (chart) chart.destroy();
   Chart.defaults.color = c.muted;
   Chart.defaults.borderColor = c.line;
+  const years = data.splits
+    .map((s, i) => (s ? { x: i, yHim: s.manAfter, yHer: s.womanAfter } : null))
+    .filter(Boolean);
   chart = new Chart(ctx, {
     type: "line",
     data: {
       datasets: [
         {
-          label: "Him",
+          label: "Him, stay together",
           data: data.months.map((x, i) => ({ x, y: data.manM[i] })),
           borderColor: c.him,
           backgroundColor: c.him,
@@ -162,7 +158,7 @@ function renderChart(data, divorceYear) {
           tension: 0.05,
         },
         {
-          label: "Her",
+          label: "Her, stay together",
           data: data.months.map((x, i) => ({ x, y: data.womanM[i] })),
           borderColor: c.her,
           backgroundColor: c.her,
@@ -170,12 +166,34 @@ function renderChart(data, divorceYear) {
           pointRadius: 0,
           tension: 0.05,
         },
+        {
+          label: "Him if divorced this year",
+          data: years.map((p) => ({ x: p.x, y: p.yHim })),
+          borderColor: c.him,
+          backgroundColor: c.him,
+          borderWidth: 1.5,
+          borderDash: [5, 4],
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0,
+        },
+        {
+          label: "Her if divorced this year",
+          data: years.map((p) => ({ x: p.x, y: p.yHer })),
+          borderColor: c.her,
+          backgroundColor: c.her,
+          borderWidth: 1.5,
+          borderDash: [5, 4],
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0,
+        },
       ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: { mode: "index", intersect: false },
+      interaction: { mode: "nearest", intersect: false, axis: "x" },
       plugins: {
         legend: { labels: { boxWidth: 12, color: c.ink } },
       },
@@ -197,42 +215,25 @@ function renderChart(data, divorceYear) {
         },
       },
     },
-    plugins: [
-      {
-        id: "divorceLine",
-        afterDraw(ch) {
-          const { ctx: g, chartArea, scales } = ch;
-          const x = scales.x.getPixelForValue(divorceYear);
-          if (x < chartArea.left || x > chartArea.right) return;
-          g.save();
-          g.strokeStyle = c.muted;
-          g.setLineDash([5, 4]);
-          g.beginPath();
-          g.moveTo(x, chartArea.top);
-          g.lineTo(x, chartArea.bottom);
-          g.stroke();
-          g.fillStyle = c.muted;
-          g.font = "12px Segoe UI, system-ui, sans-serif";
-          g.fillText("Split", x + 6, chartArea.top + 12);
-          g.restore();
-        },
-      },
-    ],
   });
 }
 
-function renderStats(split, lastMan, lastWoman, horizon) {
-  const transferLabel =
-    split.transfer >= 0 ? "Net transfer to her" : "Net transfer to him";
-  const transferValue = usd(Math.abs(split.transfer));
+function renderStats(data) {
+  const last = data.splits[data.splits.length - 1];
+  const year = data.splits.length - 1;
+  const perMonth = last.transfer / (year * 12);
   const items = [
-    { cls: "him", value: usd(split.manAfter), label: "Him, right after split" },
-    { cls: "her", value: usd(split.womanAfter), label: "Her, right after split" },
-    { cls: "", value: transferValue, label: transferLabel },
+    { cls: "him", value: usd(data.manY[year]), label: `Him at year ${year}, still together` },
+    { cls: "her", value: usd(data.womanY[year]), label: `Her at year ${year}, still together` },
     {
       cls: "",
-      value: usd(lastMan - lastWoman),
-      label: `Gap at year ${horizon}`,
+      value: usd(Math.abs(last.transfer)),
+      label: last.transfer >= 0 ? `If divorced year ${year}, he pays her` : `If divorced year ${year}, she pays him`,
+    },
+    {
+      cls: "",
+      value: usd(Math.abs(perMonth)),
+      label: "Per month of marriage at that year",
     },
   ];
   document.getElementById("stats").innerHTML = items
@@ -243,53 +244,79 @@ function renderStats(split, lastMan, lastWoman, horizon) {
     .join("");
 }
 
-function renderBreakdown(split, p) {
+function renderBreakdown(data, p) {
+  const last = data.splits[data.splits.length - 1];
+  const year = data.splits.length - 1;
   const rows = [
-    ["His leftover salary", split.hisLeftoverSalary],
-    ["Her leftover salary", split.herLeftoverSalary],
-    ["His investment interest", split.hisInterest],
-    ["Her investment interest", split.herInterest],
-    ["Acquired assets (split)", split.community],
-    [`Her share (${p.herSharePct}%)`, split.herPart],
-    [`Him after split (${usd(p.hisStart)} start + his share)`, split.manAfter],
-    [`Her after split (${usd(p.herStart)} start + her share)`, split.womanAfter],
+    [`If they divorced at year ${year}`, ""],
+    ["His leftover salary", last.hisLeftoverSalary],
+    ["Her leftover salary", last.herLeftoverSalary],
+    ["His investment interest", last.hisInterest],
+    ["Her investment interest", last.herInterest],
+    ["Acquired assets (would be split)", last.community],
+    [`Her share (${p.herSharePct}%)`, last.herPart],
+    ["Him after that divorce", last.manAfter],
+    ["Her after that divorce", last.womanAfter],
   ];
   document.getElementById("split-breakdown").innerHTML = rows
-    .map(([k, v]) => `<div><span>${k}</span><span>${usd(v)}</span></div>`)
+    .map(([k, v]) =>
+      v === ""
+        ? `<div><span>${k}</span><span></span></div>`
+        : `<div><span>${k}</span><span>${usd(v)}</span></div>`
+    )
     .join("");
 }
 
-function renderConclusion(split, divorceYear) {
-  const amount = Math.round(Math.abs(split.transfer));
-  const months = divorceYear * 12;
-  const perMonth = months ? amount / months : 0;
-  const monthly = `<strong>${usd(perMonth)} per month</strong>`;
-  let text;
-  if (amount === 0) {
-    text = `At the moment of divorce (year ${divorceYear}), nobody pays a settlement: the transfer is <strong>$0</strong>. Over ${months} months together, the marriage costs <strong>$0 per month</strong>.`;
-  } else if (split.transfer > 0) {
-    text = `At the moment of divorce (year ${divorceYear}), he pays her <strong>${usd(amount)}</strong>. Over ${months} months together, she costs him ${monthly} just for the marriage.`;
-  } else {
-    text = `At the moment of divorce (year ${divorceYear}), she pays him <strong>${usd(amount)}</strong>. Over ${months} months together, he costs her ${monthly} just for the marriage.`;
-  }
-  document.getElementById("conclusion").innerHTML = text;
+function renderConclusion(data) {
+  const parts = data.splits
+    .map((s, year) => {
+      if (!s) return "";
+      const amount = Math.round(Math.abs(s.transfer));
+      const months = year * 12;
+      const perMonth = usd(amount / months);
+      if (amount === 0) {
+        return `Year ${year}: nobody would pay a settlement (<strong>$0</strong>, <strong>$0 per month</strong>).`;
+      }
+      if (s.transfer > 0) {
+        return `Year ${year}: he would pay her <strong>${usd(amount)}</strong> — she costs him <strong>${perMonth} per month</strong> of marriage.`;
+      }
+      return `Year ${year}: she would pay him <strong>${usd(amount)}</strong> — he costs her <strong>${perMonth} per month</strong> of marriage.`;
+    })
+    .filter(Boolean);
+  document.getElementById("conclusion").innerHTML = parts.join("<br>");
 }
 
-function renderTable(data, divorceYear) {
+function renderTable(data) {
   const rows = data.manY
     .map((_, i) => {
-      let phase = "Start";
-      if (i > 0 && i < divorceYear) phase = "Together";
-      if (i === divorceYear) phase = "After split";
-      if (i > divorceYear) phase = "Apart";
-      const splitClass = i === divorceYear ? "split-row" : "";
-      return `<tr class="${splitClass}">
+      const s = data.splits[i];
+      if (!s) {
+        return `<tr>
+          <td>${i}</td>
+          <td class="him-cell">${usd(data.manY[i])}</td>
+          <td class="her-cell">${usd(data.womanY[i])}</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>`;
+      }
+      const who =
+        Math.round(s.transfer) === 0
+          ? "—"
+          : s.transfer > 0
+            ? "He → she"
+            : "She → he";
+      return `<tr>
         <td>${i}</td>
-        <td>${phase}</td>
-        <td class="him-cell">${usd(data.manY[i])}</td>
-        <td class="him-cell">${i ? usdDelta(data.manD[i - 1]) : "—"}</td>
-        <td class="her-cell">${usd(data.womanY[i])}</td>
-        <td class="her-cell">${i ? usdDelta(data.womanD[i - 1]) : "—"}</td>
+        <td class="him-cell">${usd(s.manBefore)}</td>
+        <td class="her-cell">${usd(s.womanBefore)}</td>
+        <td class="him-cell">${usd(s.manAfter)}</td>
+        <td class="her-cell">${usd(s.womanAfter)}</td>
+        <td class="him-cell">${usdDelta(s.hisGain)}</td>
+        <td class="her-cell">${usdDelta(s.herGain)}</td>
+        <td>${who} ${Math.round(s.transfer) === 0 ? "" : usd(Math.abs(s.transfer))} (${usd(Math.abs(s.transfer) / (i * 12))}/mo)</td>
       </tr>`;
     })
     .join("");
@@ -298,11 +325,13 @@ function renderTable(data, divorceYear) {
     <thead>
       <tr>
         <th>Year</th>
-        <th>Phase</th>
-        <th>Him</th>
-        <th>His change</th>
-        <th>Her</th>
-        <th>Her change</th>
+        <th>Him together</th>
+        <th>Her together</th>
+        <th>Him if divorce</th>
+        <th>Her if divorce</th>
+        <th>His gain/loss</th>
+        <th>Her gain/loss</th>
+        <th>Settlement</th>
       </tr>
     </thead>
     <tbody>${rows}</tbody>
@@ -322,17 +351,12 @@ function updateLeftoverHint(form) {
   const himA = leftoverApart(p, "him");
   const herA = leftoverApart(p, "her");
   document.getElementById("leftover-hint").textContent =
-    `Leftover per month — together: him ${usd(himT)}, her ${usd(herT)}. ` +
-    `After split: him ${usd(himA)}, her ${usd(herA)}.`;
+    `Leftover per month while together: him ${usd(himT)}, her ${usd(herT)}. ` +
+    `If they divorced, leftover would become: him ${usd(himA)}, her ${usd(herA)}.`;
 }
 
 function run(form) {
   const p = readInputs(form);
-  if (p.divorceYear > p.horizon) {
-    showError("Years together cannot be longer than years to project.");
-    return;
-  }
-
   const warnings = [];
   if (leftoverTogether(p, "him") < 0) {
     warnings.push("While together, his leftover is negative, so his portfolio is drawn down.");
@@ -344,16 +368,11 @@ function run(form) {
 
   const data = simulate(p);
   document.getElementById("results").hidden = false;
-  renderStats(
-    data.split,
-    data.manY[data.manY.length - 1],
-    data.womanY[data.womanY.length - 1],
-    p.horizon
-  );
-  renderBreakdown(data.split, p);
-  renderTable(data, p.divorceYear);
-  renderChart(data, p.divorceYear);
-  renderConclusion(data.split, p.divorceYear);
+  renderStats(data);
+  renderBreakdown(data, p);
+  renderTable(data);
+  renderChart(data);
+  renderConclusion(data);
 }
 
 const form = document.getElementById("calc-form");
@@ -381,7 +400,7 @@ document.getElementById("theme-toggle").addEventListener("click", () => {
   document.documentElement.setAttribute("data-theme", next);
   localStorage.setItem("theme", next);
   syncThemeToggle();
-  if (lastChart) renderChart(lastChart.data, lastChart.divorceYear);
+  if (lastChart) renderChart(lastChart.data);
 });
 
 syncThemeToggle();
